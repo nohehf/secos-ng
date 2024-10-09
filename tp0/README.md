@@ -49,6 +49,12 @@ provient la valeur de point d'entrée à `0x302010` au lieu de `0x300000`.**
 
 Note : il est possible de s'aider également de la page wiki sur les options de [linkage](https://github.com/agantet/secos-ng/wiki/Tooling#options-de-linkage).
 
+**REPONSE:**
+
+Le `0x10` (16bits) correspond a l'espace de mbh. mbh signifie multiboot header cf: <https://intermezzos.github.io/book/first-edition/multiboot-headers.html#grub-and-multiboot>. 
+Ici le mbh fait 12 bytes (3 ints = 3*4). La memoire est alignee sur 16, on arrive donc au 0x10.
+
+on voit dans [entry.s](../kernel/core/entry.s) que `.space`, de la section `.stack` vaut `0x2000` soit le decalage de 2000. (la stack a 0x2000 bits d'espace).
 
 ## Cartographie mémoire au démarrage
 
@@ -58,7 +64,7 @@ pour obtenir des informations sur la RAM dont il va pouvoir disposer.
 
 Avant que le noyau ait la main, le bootloader GRUB s'est exécuté et a
 notamment commencé à remplir de nombreuses informations système dans un objet
-conforme au format [Multiboot Information version 1](https://www.gnu.org/software/grub/manual/multiboot/multiboot.html) (MBI). Des définitions de structures liées au MBI sont fournies dans SECOS : 
+conforme au format [Multiboot Information version 1](https://www.gnu.org/software/grub/manual/multiboot/multiboot.html) (MBI). Des définitions de structures liées au MBI sont fournies dans SECOS:
 [`include/mbi.h`](../kernel/include/mbi.h) et [`include/grub_mbi.h`](../kernel/include/grub_mbi.h). Par défaut
 dans SECOS, ces informations peuvent être accédées dans le champ `mbi` 
 de l'objet global pré-initialisé [`info`](./tp.c#l5) de type [`info_t`](../kernel/include/info.h).
@@ -80,6 +86,13 @@ comme celle ci-dessous et l'afficher dans les logs de debug de SECOS :**
 [0x7fe0000 - 0x7ffffff] MULTIBOOT_MEMORY_RESERVED
 [0xfffc0000 - 0xffffffff] MULTIBOOT_MEMORY_RESERVED
 ```
+
+-> Pour comprendre pourquoi ces addresses:
+entre 0 et 1MB (0xfffff) on a le boot loader, ...
+
+0x7fdffff -> fin de la memoire physique de la machine (128MB)
+
+**OK**
 
 ## Utilisation d'adresses mémoire sans configuration supplémentaire
 
@@ -103,6 +116,18 @@ debug("after: 0x%x\n", *ptr_in_reserved_mem);                // check
 ```
 Le comportement observé semble-t-il cohérent ?
 
+**Reponse**
+
+J'obtiens:
+```c
+Available mem (0x0): before: 0xf000ff53 after: 0xaaaaaaaa
+Reserved mem (at: 0xf0000):  before: 0xa646e after: 0xa646e
+```
+Lecture / Ecriture dans une zone disponible: OK
+Lecture / Ecriture dans une zone reservee: Lecture ok, ecriture inefficace
+
 **Q4 : Compléter la fonction `tp()` de [tp.c](./tp.c) pour essayer de lire ou
   écrire à une adresse en dehors de la mémoire physique disponible (128 MB).
   Que se passe-t-il ? Comment pourrait-on l'expliquer ?**
+
+Lecture / Ecriture dans une zone hors de la memoire dispo (cf correction)
