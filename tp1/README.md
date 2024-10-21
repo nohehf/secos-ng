@@ -39,9 +39,39 @@ point d'entrée du noyau.
   de base de la GDT en cours d'utilisation ainsi que sa "limite" (type utile :
   `gdt_reg_t`).**
 
+`get_gdtr`
+
+**REPONSE**
+
+SGDT: `Store Global Descriptor Table Register`.
+<https://www.felixcloutier.com/x86/sgdt>
+
+cf [~/n7/tls-sec/x86.pdf page 1830](~/n7/tls-sec/x86.pdf)
+
 **Q2\* :  Dans [`tp.c`](./tp.c), un exemple d'implémentation d'affichage du
   contenu de table de type GDT est fournie (fonction `print_gdt_content`).
   L'utiliser pour afficher le contenu de la GDT courante.**
+
+
+```c
+gdt_reg_t gdtr_ptr;
+get_gdtr(gdtr_ptr);
+print_gdt_content(gdtr_ptr);
+```
+
+donne:
+
+```
+secos- (c) Airbus
+0 [0x0 - 0xfff0] seg_t: 0x0 desc_t: 0 priv: 0 present: 0 avl: 0 longmode: 0 default: 0 gran: 0 
+1 [0x0 - 0xffffffff] seg_t: 0xa desc_t: 1 priv: 0 present: 1 avl: 0 longmode: 0 default: 1 gran: 1 
+2 [0x0 - 0xffffffff] seg_t: 0x3 desc_t: 1 priv: 0 present: 1 avl: 0 longmode: 0 default: 1 gran: 1 
+3 [0x0 - 0xffff] seg_t: 0xe desc_t: 1 priv: 0 present: 1 avl: 0 longmode: 0 default: 0 gran: 0 
+4 [0x0 - 0xffff] seg_t: 0x3 desc_t: 1 priv: 0 present: 1 avl: 0 longmode: 0 default: 0 gran: 0 
+halted !
+```
+
+cf `segment_descriptor`
 
 **Q3 : Lire les valeurs des sélecteurs de segment à l'aide des macros prévues
   à cet effet dans [`kernel/include/segmem.h`](../kernel/include/segmem.h), et en déduire quels descripteurs de cette GDT sont en
@@ -52,8 +82,29 @@ point d'entrée du noyau.
 * Le segment de pile (sélecteur ss)
 * D'autres segments (sélecteurs autres : es, fs, gs, etc.)
 
+```c
+Selector values:
+cs: 0x8 //
+ss: 0x10
+ds: 0x10
+es: 0x10
+fs: 0x10
+gs: 0x10
+
+Selector indexes:
+cs: 0x1
+ss: 0x2
+ds: 0x2
+es: 0x2
+fs: 0x2
+gs: 0x2
+```
+
 **Q4 : Que constate-t-on ? Que dire de la ségrégation mémoire mise en place
   par défaut par GRUB avec une telle configuration ?**
+
+Deux segments, mais qui sont sur la meme plage physique.
+CS pointe vers le segment 1, les autres le segment 2.
 
 
 ## Une première reconfiguration de la GDT : en mode "flat"
@@ -92,6 +143,10 @@ système relatifs à la segmentation : GDTR, cs/ss/ds/etc.
   DS. Que se passe-t-il ? Est-ce conforme avec ce que décrit la documentation
   Intel à ce sujet ? Faire de même avec un descripteur de segment de données
   pour le sélecteur CS.**
+
+cela semble fonctionner mais etonnant.
+Question: voir avec anais
+
 
 
 ## Exemple d'utilisation de la segmentation pour la sécurité
