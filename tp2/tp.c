@@ -2,27 +2,27 @@
 #include <debug.h>
 #include <intr.h>
 
-// Declare bp_handler as a naked function to suppress compiler-generated prologue/epilogue
-void __attribute__((naked)) bp_handler()
-{
-	asm volatile(
-		"pushl $-1\n\t"
-		"pushl $0\n\t"
-		"pusha\n\t"				// Save general-purpose registers
-		"mov %esp, %eax\n\t"	// Question pourquoi ??
-		"call bp_handler_c\n\t" // Call the C function
-		"popa\n\t"				// Restore general-purpose registers
-		// Question: Pourquoi fait dans idt.s et pas ici ?
-		"add $8, %esp\n\t"
-		"iret\n\t" // Return from interrupt
-	);
-}
+#define DEFINE_INTERRUPT_HANDLER(handler_name, c_function) \
+	void __attribute__((naked)) handler_name()             \
+	{                                                      \
+		asm volatile(                                      \
+			"pushl $-1\n\t"                                \
+			"pushl $0\n\t"                                 \
+			"pusha\n\t"                                    \
+			"mov %esp, %eax\n\t"                           \
+			"call " #c_function "\n\t"                     \
+			"popa\n\t"                                     \
+			"add $8, %esp\n\t"                             \
+			"iret\n\t");                                   \
+	}
 
 // C function to handle the interrupt logic
 void bp_handler_c()
 {
 	printf("bp_handler called!\n");
 }
+
+DEFINE_INTERRUPT_HANDLER(bp_handler, bp_handler_c)
 
 void bp_trigger()
 {
@@ -50,6 +50,23 @@ void tp()
 
 	printf("returned to tp()\n");
 }
+
+// Declare bp_handler as a naked function to suppress compiler-generated prologue/epilogue
+// void __attribute__((naked)) bp_handler()
+// {
+// 	asm volatile(
+// 		// Pass arguments ?
+// 		"pushl $-1\n\t"
+// 		"pushl $0\n\t"
+// 		"pusha\n\t"				// Save general-purpose registers
+// 		"mov %esp, %eax\n\t"	// Question pourquoi ??
+// 		"call bp_handler_c\n\t" // Call the C function
+// 		"popa\n\t"				// Restore general-purpose registers
+// 		// Pop arguments off the stack
+// 		"add $8, %esp\n\t"
+// 		"iret\n\t" // Return from interrupt
+// 	);
+// }
 
 // It can also be in a single function:
 // void __attribute__((naked)) bp_handler(int_ctx_t *ctx)
