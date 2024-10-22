@@ -60,7 +60,7 @@ générées.
 ## Prise en main de l'IDT
 
 **Q1\* : Dans tp.c, localiser l'IDT et afficher son adresse de chargement**
-  (cf. fonction `get_idtr()` définie dans [`segmem.h`](../kernel/include/segmem.h)).
+  (cf. fonction `get_idtr()` définie dans ~~[`segmem.h`](../kernel/include/segmem.h)~~ [`intr.h`](../kernel/include/intr.h)).
 
 ## Gestion furtive des breakpoints #BP
 
@@ -75,7 +75,7 @@ qu'elle puisse gérer l'exception #BP. Le but est de ne pas modifier
   l'écran.**
 
 **Q3 : Modifier le descripteur d'interruption (cf. type `int_desc_t` défini 
-  dans [`segmem.h`](../kernel/include/segmem.h)) de #BP, stocké
+  dans ~~[`segmem.h`](../kernel/include/segmem.h)~~ [`intr.h`](../kernel/include/intr.h)) de #BP, stocké
   dans l'IDT, afin d'y référencer `bp_handler()` à la place du trampoline
   déjà installé.**
 
@@ -89,6 +89,24 @@ qu'elle puisse gérer l'exception #BP. Le but est de ne pas modifier
   Quelle est la dernière instruction de cette fonction ? Quel est son
   impact sur la pile ? Est-ce cohérent avec ce qui était sur la pile au
   moment de l'arrivée d'une interruption ?**
+
+On a:
+```
+00000000 <bp_handler>:
+   0:	55                   	push   %ebp
+   1:	89 e5                	mov    %esp,%ebp
+   3:	83 ec 08             	sub    $0x8,%esp
+   6:	83 ec 0c             	sub    $0xc,%esp
+   9:	68 00 00 00 00       	push   $0x0
+   e:	e8 fc ff ff ff       	call   f <bp_handler+0xf>
+  13:	83 c4 10             	add    $0x10,%esp
+  16:	f4                   	hlt
+  17:	90                   	nop
+  18:	c9                   	leave
+  19:	c3                   	ret
+```
+
+Le ret pose probleme car on a pas effectué de call avant, on va donc essayer de restaurer la pile vers un etat incohérent.
 
 ### Deuxième essai : via l'assembleur inline
 
