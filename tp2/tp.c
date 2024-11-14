@@ -2,24 +2,23 @@
 #include <debug.h>
 #include <intr.h>
 
+// Question: pourquoi pas de leave
 #define DEFINE_INTERRUPT_HANDLER(handler_name, c_function) \
 	void __attribute__((naked)) handler_name()             \
 	{                                                      \
 		asm volatile(                                      \
-			"pushl $-1\n\t"                                \
-			"pushl $0\n\t"                                 \
 			"pusha\n\t"                                    \
 			"mov %esp, %eax\n\t"                           \
 			"call " #c_function "\n\t"                     \
 			"popa\n\t"                                     \
-			"add $8, %esp\n\t"                             \
 			"iret\n\t");                                   \
 	}
 
 // C function to handle the interrupt logic
-void bp_handler_c()
+void bp_handler_c(cpu_ctx_t *ctx)
 {
 	printf("bp_handler called!\n");
+	printf("ctx->eip.raw = 0x%x\n", ctx->eip.raw);
 }
 
 DEFINE_INTERRUPT_HANDLER(bp_handler, bp_handler_c)

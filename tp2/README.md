@@ -127,6 +127,8 @@ pour comparer cette valeur à une adresse de votre noyau.**
   interruption et qu'il est impératif de sauvegarder avant tout traitement de
   l'interruption ? L'implémenter en assembleur inline dans  `bp_handler`.**
 
+Le contexte: etat de la pile + addresse de retour
+
 **Q9\* : Par quelle instruction doit se terminer la routine pour que le noyau
   rende la main à la fonction tp() ? L'implémenter en assembleur inline dans
   `bp_handler`.**
@@ -138,3 +140,5 @@ pour comparer cette valeur à une adresse de votre noyau.**
 **Q11 : Quelles conclusions peut-on tirer du développement en C d'un
   gestionnaire d'interruption ? Pourquoi l'assembleur semble-t-il plus
   approprié ?**
+
+Compliqué de wrapper correctement mais, naked aide bien 
