@@ -2,5 +2,6 @@
   "files.associations": {
     "debug.h": "c",
     "intr.h": "c"
-  }
+  },
+  "C_Cpp.errorSquiggles": "enabled"
 }
